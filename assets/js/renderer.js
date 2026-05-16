@@ -39,15 +39,24 @@
 
 	Renderer.prototype.render = function () {
 		this.shapeLayer.destroyChildren();
-		this.handleLayer.destroyChildren();
-
 		var page = this.ctx.getPage();
 		if (page) {
 			for (var i = 0; i < page.shapes.length; i++) {
 				this._drawShape(page.shapes[i]);
 			}
 		}
+		this.applySelection();
+	};
+
+	/** Update selection highlight + edit handles WITHOUT rebuilding shapes. */
+	Renderer.prototype.applySelection = function () {
 		var selId = this.ctx.getSelectedId();
+		this.shapeLayer.getChildren().forEach(function (group) {
+			var on = group.pmtId === selId;
+			group.find('.pmt-geom').forEach(function (n) { n.shadowEnabled(on); });
+		});
+		this.handleLayer.destroyChildren();
+		var page = this.ctx.getPage();
 		if (selId && page) {
 			var sel = this._find(selId);
 			if (sel) { this._drawHandles(sel); }
@@ -62,6 +71,11 @@
 		for (var i = 0; i < page.shapes.length; i++) {
 			this._drawShape(page.shapes[i]);
 		}
+		var selId = this.ctx.getSelectedId();
+		this.shapeLayer.getChildren().forEach(function (group) {
+			var on = group.pmtId === selId;
+			group.find('.pmt-geom').forEach(function (n) { n.shadowEnabled(on); });
+		});
 		this.shapeLayer.batchDraw();
 	};
 
@@ -79,7 +93,6 @@
 		var self = this;
 		var color = this._color(shape);
 		var sw = shape.strokeWidth || 2;
-		var selected = this.ctx.getSelectedId() === shape.id;
 
 		var group = new Konva.Group({ id: 'g_' + shape.id, name: 'pmt-shape' });
 		group.pmtId = shape.id;
@@ -137,13 +150,14 @@
 			}
 		}
 
-		nodes.forEach(function (n) { group.add(n); });
-
-		if (selected) {
-			nodes.forEach(function (n) {
-				if (n.stroke) { n.shadowColor('#1e88e5'); n.shadowBlur(8); n.shadowOpacity(0.9); }
-			});
-		}
+		nodes.forEach(function (n) {
+			n.name('pmt-geom');
+			n.shadowColor('#1e88e5');
+			n.shadowBlur(8);
+			n.shadowOpacity(0.9);
+			n.shadowEnabled(false);
+			group.add(n);
+		});
 
 		// Measurement label.
 		var label = this._buildLabel(shape, color);

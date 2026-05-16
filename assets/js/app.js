@@ -241,7 +241,7 @@
 			if (!ok) { id = null; }
 		}
 		this.selectedId = id;
-		this.renderer.render();
+		this.renderer.applySelection();
 		this._renderProps();
 	};
 
