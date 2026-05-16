@@ -195,6 +195,30 @@
 		this.container.style.cursor = on ? 'grab' : 'default';
 	};
 
+	/**
+	 * Data URL of the whole current page (background + shapes), edit handles
+	 * excluded, regardless of the current zoom / pan.
+	 */
+	Viewer.prototype.captureDataURL = function () {
+		if (!this.docWidth) { return null; }
+		var s = this.stage;
+		var sc = s.scaleX(), px = s.x(), py = s.y();
+		this.handleLayer.hide();
+		this.overlayLayer.hide();
+		s.scale({ x: 1, y: 1 });
+		s.position({ x: 0, y: 0 });
+		s.draw();
+		var url = s.toDataURL({
+			x: 0, y: 0, width: this.docWidth, height: this.docHeight, pixelRatio: 1.5
+		});
+		s.scale({ x: sc, y: sc });
+		s.position({ x: px, y: py });
+		this.handleLayer.show();
+		this.overlayLayer.show();
+		s.draw();
+		return url;
+	};
+
 	/* ----------------------------------------------------- events */
 
 	Viewer.prototype._bindZoom = function () {

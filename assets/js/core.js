@@ -66,6 +66,26 @@
 			return run > 0 ? Math.atan2(rise, run) * 180 / Math.PI : 0;
 		},
 
+		/**
+		 * True 3D length (px) of a plan-view polyline lying on a tilted plane.
+		 * dirDeg is the downhill direction in the plan; only the component of
+		 * each segment along that direction is foreshortened.
+		 */
+		slopedPolylineLengthPx: function (pts, dirDeg, angleDeg) {
+			var dr = dirDeg * Math.PI / 180;
+			var dx = Math.cos(dr), dy = Math.sin(dr);
+			var t = Math.tan(angleDeg * Math.PI / 180);
+			var L = 0, i;
+			for (i = 0; i < pts.length - 1; i++) {
+				var vx = pts[i + 1].x - pts[i].x;
+				var vy = pts[i + 1].y - pts[i].y;
+				var planLen = Math.hypot(vx, vy);
+				var along = vx * dx + vy * dy;
+				L += Math.hypot(planLen, along * t);
+			}
+			return L;
+		},
+
 		convertLength: function (value, fromUnit, toUnit) {
 			return value * UNIT_TO_M[fromUnit] / UNIT_TO_M[toUnit];
 		},
@@ -178,7 +198,8 @@
 				id: uid('slp'),
 				name: name || 'Slope ' + (project.slopes.length + 1),
 				angleDeg: angleDeg || 0,
-				factor: Geometry.slopeFactorFromAngle(angleDeg || 0)
+				factor: Geometry.slopeFactorFromAngle(angleDeg || 0),
+				directionDeg: null
 			};
 		},
 
@@ -294,7 +315,13 @@
 			if (res.kind === 'length') {
 				var lenBase = lengthPx / ppu;
 				res.length = Geometry.convertLength(lenBase, baseUnit, dispUnit);
-				res.trueLength = res.length * res.slopeFactor;
+				if (slope && slope.directionDeg != null &&
+					(shape.type === 'linear' || shape.type === 'polyline')) {
+					var truePx = Geometry.slopedPolylineLengthPx(pts, slope.directionDeg, slope.angleDeg);
+					res.trueLength = Geometry.convertLength(truePx / ppu, baseUnit, dispUnit);
+				} else {
+					res.trueLength = res.length * res.slopeFactor;
+				}
 				if (slope) {
 					res.label = Format.length(res.trueLength, dispUnit, prec) +
 						' ↗ (' + Format.length(res.length, dispUnit, prec) + ' plan)';

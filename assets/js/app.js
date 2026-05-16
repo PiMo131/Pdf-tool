@@ -35,6 +35,7 @@
 
 	var TOOLS = [
 		['select', 'Select'], ['pan', 'Pan'], ['calibrate', 'Set scale'],
+		['verify', 'Verify scale'],
 		['linear', 'Line'], ['polyline', 'Polyline'], ['area', 'Area'],
 		['rect', 'Rectangle'], ['circle', 'Circle'], ['count', 'Count'],
 		['angle', 'Pitch angle'], ['text', 'Text'], ['arrow', 'Arrow']
@@ -119,7 +120,9 @@
 			tbtn('Open', function () { self._openDialog(); }),
 			tbtn('Save', function () { self._save(); }, 'pmt-primary'),
 			tbtn('CSV', function () { PMT.Export.exportTakeoff(self.project); }),
-			tbtn('PNG', function () { PMT.Export.exportImage(self.viewer.stage, self.project); }),
+			tbtn('PNG', function () { PMT.Export.exportImage(self.viewer, self.project); }),
+			tbtn('Plan PDF', function () { PMT.Export.exportPlanPdf(self.viewer, self.project); }),
+			tbtn('Report', function () { PMT.Export.exportReportPdf(self.project); }),
 			el('span', { class: 'pmt-sep' }),
 			tbtn('↶', function () { self.undo(); }),
 			tbtn('↷', function () { self.redo(); }),
@@ -452,6 +455,66 @@
 		});
 	};
 
+	App.prototype.onVerifyLine = function (a, b) {
+		var self = this;
+		var page = this.page();
+		if (!page || !page.calibration) {
+			this._status('Set a scale first, then verify it.');
+			this.setTool('select');
+			return;
+		}
+		var cal = page.calibration;
+		var u = this.project.settings.displayUnit;
+		var lengthPx = G.dist(a, b);
+		var measured = G.convertLength(lengthPx / cal.ppu, cal.unit, u);
+
+		var expInput = el('input', { class: 'pmt-input', type: 'number', step: 'any', value: PMT.Format.round(measured, 3) });
+		var resultEl = el('p', { class: 'pmt-hint' });
+		function recalc() {
+			var exp = parseFloat(expInput.value);
+			if (!exp || exp <= 0) { resultEl.textContent = ''; return; }
+			var err = (measured - exp) / exp * 100;
+			resultEl.textContent = 'Measured ' + PMT.Format.number(measured, 3) + ' ' + u +
+				'  ·  error ' + PMT.Format.round(err, 2) + '%';
+		}
+		expInput.oninput = recalc;
+		recalc();
+
+		this._modal({
+			title: 'Verify scale',
+			body: el('div', {}, [
+				el('p', { class: 'pmt-hint', text: 'This line measures ' + PMT.Format.number(measured, 3) + ' ' + u + ' at the current scale. Enter its true distance to check accuracy.' }),
+				el('label', { class: 'pmt-field' }, ['True distance (' + u + ')', expInput]),
+				resultEl
+			]),
+			buttons: [
+				{ label: 'Close', onClick: function () { self.setTool('select'); } },
+				{
+					label: 'Recalibrate to this', primary: true, onClick: function () {
+						var exp = parseFloat(expInput.value);
+						if (!exp || exp <= 0) { return false; }
+						var expCal = G.convertLength(exp, u, cal.unit);
+						page.calibration = { ppu: lengthPx / expCal, unit: cal.unit };
+						self.commit();
+						self.setTool('select');
+						self._status('Scale recalibrated.');
+					}
+				}
+			]
+		});
+	};
+
+	App.prototype.onSlopeDirection = function (a, b) {
+		var slope = this._slopeDirTarget && P.findSlope(this.project, this._slopeDirTarget);
+		if (slope) {
+			slope.directionDeg = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+			this.commit();
+			this._status('Downhill direction set for "' + slope.name + '".');
+		}
+		this._slopeDirTarget = null;
+		this.setTool('select');
+	};
+
 	App.prototype.promptText = function (cb) {
 		var ta = el('textarea', { class: 'pmt-input', rows: '3' });
 		this._modal({
@@ -618,15 +681,21 @@
 		p.innerHTML = '';
 		var head = el('div', { class: 'pmt-section-title' }, [
 			el('span', { text: 'Legend & totals' }),
-			el('button', {
-				class: 'pmt-btn pmt-mini', text: '+ Item',
-				onclick: function () {
-					var item = P.newLegendItem(self.project, 'area');
-					self.project.legend.push(item);
-					self.currentLegendId = item.id;
-					self.commit();
-				}
-			})
+			el('span', { class: 'pmt-row' }, [
+				el('button', {
+					class: 'pmt-btn pmt-mini', text: 'Templates',
+					onclick: function () { self._templateDialog(); }
+				}),
+				el('button', {
+					class: 'pmt-btn pmt-mini', text: '+ Item',
+					onclick: function () {
+						var item = P.newLegendItem(self.project, 'area');
+						self.project.legend.push(item);
+						self.currentLegendId = item.id;
+						self.commit();
+					}
+				})
+			])
 		]);
 		p.appendChild(head);
 
@@ -701,6 +770,89 @@
 		]));
 	};
 
+	/* ----------------------------------------------------- legend templates */
+
+	App.prototype._templates = function () {
+		try { return JSON.parse(window.localStorage.getItem('pmt_legend_templates') || '[]'); }
+		catch (e) { return []; }
+	};
+
+	App.prototype._saveTemplatesList = function (arr) {
+		try { window.localStorage.setItem('pmt_legend_templates', JSON.stringify(arr)); }
+		catch (e) { this._status('Could not save template (storage unavailable).'); }
+	};
+
+	App.prototype._templateDialog = function () {
+		var self = this;
+		var nameI = el('input', { class: 'pmt-input pmt-grow', type: 'text', value: (this.project.name || 'Legend') + ' template' });
+		var list = el('div', { class: 'pmt-list' });
+
+		function refresh() {
+			list.innerHTML = '';
+			var tpls = self._templates();
+			if (!tpls.length) {
+				list.appendChild(el('p', { class: 'pmt-hint', text: 'No saved templates yet.' }));
+				return;
+			}
+			tpls.forEach(function (tpl, idx) {
+				list.appendChild(el('div', { class: 'pmt-list-row' }, [
+					el('span', { class: 'pmt-grow', text: tpl.name + ' (' + tpl.items.length + ' items)' }),
+					el('button', {
+						class: 'pmt-btn pmt-mini', text: 'Load',
+						onclick: function () {
+							self.project.legend = tpl.items.map(function (it) {
+								return {
+									id: P.uid('leg'), name: it.name, color: it.color,
+									kind: it.kind, unitCost: it.unitCost || 0, waste: it.waste || 0
+								};
+							});
+							self.currentLegendId = self.project.legend[0] ? self.project.legend[0].id : null;
+							self.commit();
+							self._closeModal();
+						}
+					}),
+					el('button', {
+						class: 'pmt-btn pmt-mini pmt-danger', text: '×',
+						onclick: function () {
+							var t = self._templates();
+							t.splice(idx, 1);
+							self._saveTemplatesList(t);
+							refresh();
+						}
+					})
+				]));
+			});
+		}
+		refresh();
+
+		this._modal({
+			title: 'Legend templates',
+			body: el('div', {}, [
+				el('p', { class: 'pmt-hint', text: 'Save the current legend (items, colours, costs) for reuse on other projects. Loading a template replaces the current legend.' }),
+				el('div', { class: 'pmt-row' }, [
+					nameI,
+					el('button', {
+						class: 'pmt-btn pmt-primary', text: 'Save current',
+						onclick: function () {
+							if (!self.project.legend.length) { return; }
+							var t = self._templates();
+							t.push({
+								name: nameI.value || 'Template',
+								items: self.project.legend.map(function (i) {
+									return { name: i.name, color: i.color, kind: i.kind, unitCost: i.unitCost, waste: i.waste };
+								})
+							});
+							self._saveTemplatesList(t);
+							refresh();
+						}
+					})
+				]),
+				list
+			]),
+			buttons: [{ label: 'Close' }]
+		});
+	};
+
 	/* ----------------------------------------------------- panels: slopes */
 
 	App.prototype._renderSlopes = function () {
@@ -718,13 +870,30 @@
 		}
 
 		this.project.slopes.forEach(function (sl) {
+			var dirText = sl.directionDeg == null
+				? 'Direction: not set — linear measures use whole-length correction'
+				: 'Downhill direction: ' + PMT.Format.round(sl.directionDeg, 0) + '° (per-segment correction active)';
 			var row = el('div', { class: 'pmt-slope-row' }, [
-				el('span', { text: sl.name + ' — ' + PMT.Format.round(sl.angleDeg, 1) + '° · factor ×' + PMT.Format.round(sl.factor, 3) }),
+				el('div', { class: 'pmt-grow' }, [
+					el('div', { text: sl.name + ' — ' + PMT.Format.round(sl.angleDeg, 1) + '° · factor ×' + PMT.Format.round(sl.factor, 3) }),
+					el('div', { class: 'pmt-subtle', text: dirText })
+				]),
+				el('button', {
+					class: 'pmt-btn pmt-mini', text: '↘ dir',
+					title: 'Draw the downhill direction on the plan view',
+					onclick: function () {
+						self._slopeDirTarget = sl.id;
+						self.setTool('slopedir');
+						self._status('Draw an arrow down the slope on the plan view.');
+					}
+				}),
 				el('button', {
 					class: 'pmt-btn pmt-mini pmt-danger', text: '×',
 					onclick: function () {
 						self.project.slopes = self.project.slopes.filter(function (x) { return x.id !== sl.id; });
-						self.page().shapes.forEach(function (s) { if (s.slopeId === sl.id) { s.slopeId = null; } });
+						self.project.pages.forEach(function (pg) {
+							pg.shapes.forEach(function (s) { if (s.slopeId === sl.id) { s.slopeId = null; } });
+						});
 						self.commit();
 					}
 				})

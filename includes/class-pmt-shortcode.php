@@ -9,9 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class PMT_Shortcode {
 
-	const KONVA_SRC      = 'https://unpkg.com/konva@9/konva.min.js';
-	const PDFJS_SRC      = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
-	const PDFJS_WORKER   = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+	const KONVA_SRC    = 'https://unpkg.com/konva@9/konva.min.js';
+	const PDFJS_SRC    = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
+	const PDFJS_WORKER = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+	const PDFLIB_SRC   = 'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js';
 
 	/** @var PMT_Shortcode */
 	private static $instance;
@@ -34,11 +35,12 @@ class PMT_Shortcode {
 	public function register_assets() {
 		wp_register_script( 'pmt-konva', self::KONVA_SRC, array(), '9', true );
 		wp_register_script( 'pmt-pdfjs', self::PDFJS_SRC, array(), '3.11.174', true );
+		wp_register_script( 'pmt-pdflib', self::PDFLIB_SRC, array(), '1.17.1', true );
 
 		$v = PMT_VERSION;
 		wp_register_script( 'pmt-core', PMT_URL . 'assets/js/core.js', array(), $v, true );
 		wp_register_script( 'pmt-api', PMT_URL . 'assets/js/api.js', array( 'pmt-core' ), $v, true );
-		wp_register_script( 'pmt-export', PMT_URL . 'assets/js/export.js', array( 'pmt-core' ), $v, true );
+		wp_register_script( 'pmt-export', PMT_URL . 'assets/js/export.js', array( 'pmt-core', 'pmt-pdflib' ), $v, true );
 		wp_register_script( 'pmt-viewer', PMT_URL . 'assets/js/viewer.js', array( 'pmt-core', 'pmt-konva', 'pmt-pdfjs' ), $v, true );
 		wp_register_script( 'pmt-renderer', PMT_URL . 'assets/js/renderer.js', array( 'pmt-core', 'pmt-konva' ), $v, true );
 		wp_register_script( 'pmt-tools', PMT_URL . 'assets/js/tools.js', array( 'pmt-core', 'pmt-konva' ), $v, true );
@@ -53,7 +55,10 @@ class PMT_Shortcode {
 		wp_register_style( 'pmt-style', PMT_URL . 'assets/css/app.css', array(), $v );
 	}
 
-	private function enqueue_assets() {
+	/**
+	 * Enqueue the front-end app. Public so the full-screen page can reuse it.
+	 */
+	public function enqueue_assets() {
 		wp_enqueue_style( 'pmt-style' );
 		wp_enqueue_script( 'pmt-app' );
 

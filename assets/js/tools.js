@@ -93,6 +93,10 @@
 			function commitShape() {
 				if (opts.calibration) {
 					if (pts.length >= 2) { app.onCalibrationLine(pts[0], pts[1]); }
+				} else if (opts.verify) {
+					if (pts.length >= 2) { app.onVerifyLine(pts[0], pts[1]); }
+				} else if (opts.slopedir) {
+					if (pts.length >= 2) { app.onSlopeDirection(pts[0], pts[1]); }
 				} else if (opts.angle) {
 					if (pts.length >= 2) { app.onAngleLine(pts[0], pts[1]); }
 				} else {
@@ -229,6 +233,8 @@
 		return {
 			select: selectTool,
 			calibrate: MultiPoint({ calibration: true, autoFinish: 2 }),
+			verify: MultiPoint({ verify: true, autoFinish: 2 }),
+			slopedir: MultiPoint({ slopedir: true, autoFinish: 2 }),
 			linear: MultiPoint({ type: 'linear', autoFinish: 2 }),
 			polyline: MultiPoint({ type: 'polyline' }),
 			area: MultiPoint({ type: 'area', closed: true }),
