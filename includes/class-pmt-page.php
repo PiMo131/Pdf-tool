@@ -55,10 +55,7 @@ class PMT_Page {
 		if ( ! $this->is_endpoint() ) {
 			return;
 		}
-		if ( ! is_user_logged_in() ) {
-			auth_redirect();
-			exit;
-		}
+		// Open to everyone; saving still requires a logged-in user.
 		add_filter( 'show_admin_bar', '__return_false' );
 		status_header( 200 );
 		include PMT_DIR . 'templates/fullscreen.php';

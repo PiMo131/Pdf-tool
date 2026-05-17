@@ -80,12 +80,8 @@ class PMT_Shortcode {
 	 * Shortcode output.
 	 */
 	public function render( $atts ) {
-		if ( ! is_user_logged_in() ) {
-			return '<div class="pmt-login-required">' .
-				esc_html__( 'Please log in to use the PDF Measure Tool.', 'pdf-measure-tool' ) .
-				'</div>';
-		}
-
+		// The tool itself runs entirely in the browser; no login required.
+		// Only saving / opening projects needs an authenticated user.
 		$this->enqueue_assets();
 
 		ob_start();

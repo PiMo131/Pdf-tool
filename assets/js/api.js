@@ -32,8 +32,9 @@
 	}
 
 	PMT.Api = {
+		/** True only when a logged-in user can use the save/open endpoints. */
 		available: function () {
-			return !!cfg.restUrl;
+			return !!cfg.restUrl && (cfg.userId || 0) > 0;
 		},
 
 		listProjects: function () {

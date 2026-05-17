@@ -83,7 +83,9 @@
 		this._pushHistory();
 		this.setTool('select');
 		this._afterChange();
-		this._status('Click "New" to upload a PDF, JPG or PNG plan.');
+		this._status(PMT.Api.available()
+			? 'Click "New" to upload a PDF, JPG or PNG plan.'
+			: 'Click "New" to start. Measuring and exporting work without login; log in to save projects.');
 	};
 
 	/* ----------------------------------------------------- UI build */
@@ -997,7 +999,7 @@
 
 	App.prototype._openDialog = function () {
 		var self = this;
-		if (!PMT.Api.available()) { this._status('Saving is not available.'); return; }
+		if (!PMT.Api.available()) { this._status('Log in to open saved projects.'); return; }
 		var list = el('div', { class: 'pmt-list', text: 'Loading…' });
 		this._modal({ title: 'Open project', body: list, buttons: [{ label: 'Close' }] });
 
@@ -1065,7 +1067,7 @@
 
 	App.prototype._save = function () {
 		var self = this;
-		if (!PMT.Api.available()) { this._status('Saving is not available.'); return; }
+		if (!PMT.Api.available()) { this._status('Log in to save projects (measuring and exporting work without login).'); return; }
 		if (!this._hasDoc) { this._status('Nothing to save yet.'); return; }
 		this._status('Saving…');
 

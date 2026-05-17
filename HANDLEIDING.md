@@ -15,8 +15,10 @@ Er zijn twee manieren:
 - **In een pagina:** plaats de shortcode `[pdf_measure_tool]` op een
   WordPress-pagina.
 
-Je moet ingelogd zijn. Werkt `/pdf-tool` niet, ga dan eenmalig naar
-**Instellingen → Permalinks → Wijzigingen opslaan**.
+Je hoeft **niet ingelogd** te zijn om te meten, annoteren en exporteren —
+inloggen is alleen nodig om projecten op te slaan en te openen. Werkt
+`/pdf-tool` niet, ga dan eenmalig naar **Instellingen → Permalinks →
+Wijzigingen opslaan**.
 
 ---
 
@@ -177,6 +179,9 @@ richting gebruikt de tool een eenvoudige correctie over de hele lengte.
 ---
 
 ## 11. Project opslaan en openen
+
+> Opslaan en openen werkt **alleen wanneer je ingelogd bent** in WordPress.
+> Meten, annoteren en exporteren werkt ook zonder login.
 
 - **Save** bewaart het project (het bestand wordt naar de mediabibliotheek
   geüpload en de metingen worden opgeslagen). Elke gebruiker ziet zijn eigen

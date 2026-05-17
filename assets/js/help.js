@@ -98,6 +98,7 @@
 		'<p>Voor lengtes op een dak is alleen het deel dat de helling op loopt verkort; een lijn langs de nok blijft op ware grootte. Klik in het paneel <b>Roof slopes</b> bij een helling op <b>&#8600; dir</b> en teken op de plattegrond een pijl in de afloeprichting. Daarna berekent de tool per lijnsegment de exacte schuine lengte.</p>',
 
 		'<h2>10. Project opslaan en openen</h2>',
+		'<p>Opslaan en openen werkt <b>alleen wanneer je ingelogd bent</b>. Meten, annoteren en exporteren werkt ook zonder login.</p>',
 		'<p><b>Save</b> bewaart het project (bestand naar de mediabibliotheek, metingen opgeslagen). <b>Open</b> toont je opgeslagen projecten. <b>New</b> start een nieuw project. Elke gebruiker ziet zijn eigen projecten.</p>',
 
 		'<h2>11. Exporteren</h2>',
