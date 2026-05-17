@@ -44,10 +44,11 @@ class PMT_Shortcode {
 		wp_register_script( 'pmt-viewer', PMT_URL . 'assets/js/viewer.js', array( 'pmt-core', 'pmt-konva', 'pmt-pdfjs' ), $v, true );
 		wp_register_script( 'pmt-renderer', PMT_URL . 'assets/js/renderer.js', array( 'pmt-core', 'pmt-konva' ), $v, true );
 		wp_register_script( 'pmt-tools', PMT_URL . 'assets/js/tools.js', array( 'pmt-core', 'pmt-konva' ), $v, true );
+		wp_register_script( 'pmt-help', PMT_URL . 'assets/js/help.js', array(), $v, true );
 		wp_register_script(
 			'pmt-app',
 			PMT_URL . 'assets/js/app.js',
-			array( 'pmt-core', 'pmt-api', 'pmt-export', 'pmt-viewer', 'pmt-renderer', 'pmt-tools' ),
+			array( 'pmt-core', 'pmt-api', 'pmt-export', 'pmt-viewer', 'pmt-renderer', 'pmt-tools', 'pmt-help' ),
 			$v,
 			true
 		);

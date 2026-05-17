@@ -292,6 +292,31 @@ textarea.pmt-input { resize: vertical; font-family: inherit; }
 	padding: 10px 14px;
 	border-top: 1px solid #2c3038;
 }
+.pmt-modal.pmt-modal--wide { width: 760px; }
+
+/* ---------- handleiding ---------- */
+.pmt-help { font-size: 13px; line-height: 1.6; color: #d7dbe2; }
+.pmt-help h2 { font-size: 15px; color: #fff; margin: 20px 0 6px; }
+.pmt-help h2:first-of-type { margin-top: 0; }
+.pmt-help h3 { font-size: 13px; color: #cdd3dd; margin: 12px 0 4px; }
+.pmt-help p { margin: 6px 0; }
+.pmt-help ul, .pmt-help ol { margin: 6px 0; padding-left: 22px; }
+.pmt-help li { margin: 3px 0; }
+.pmt-help code {
+	background: #161820; border: 1px solid #2c3038;
+	border-radius: 3px; padding: 1px 4px; font-size: 12px;
+}
+.pmt-help kbd {
+	background: #2f333d; border: 1px solid #3a3f48;
+	border-radius: 3px; padding: 1px 6px; font-size: 11px;
+}
+.pmt-help table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.pmt-help th, .pmt-help td {
+	border: 1px solid #3a3f48; padding: 5px 8px;
+	text-align: left; font-size: 12px; vertical-align: top;
+}
+.pmt-help th { background: #2c3038; color: #fff; }
+
 .pmt-list-row,
 .pmt-list { display: flex; flex-direction: column; gap: 6px; }
 .pmt-list-row { flex-direction: row; align-items: center; }

@@ -123,6 +123,7 @@
 			tbtn('PNG', function () { PMT.Export.exportImage(self.viewer, self.project); }),
 			tbtn('Plan PDF', function () { PMT.Export.exportPlanPdf(self.viewer, self.project); }),
 			tbtn('Report', function () { PMT.Export.exportReportPdf(self.project); }),
+			tbtn('? Help', function () { self._showHelp(); }),
 			el('span', { class: 'pmt-sep' }),
 			tbtn('↶', function () { self.undo(); }),
 			tbtn('↷', function () { self.redo(); }),
@@ -1099,6 +1100,17 @@
 		this.statusEl.textContent = msg || '';
 	};
 
+	/* ----------------------------------------------------- help */
+
+	App.prototype._showHelp = function () {
+		this._modal({
+			title: 'Handleiding — PDF Measure Tool',
+			body: el('div', { html: PMT.helpHtml || '<p>Handleiding niet beschikbaar.</p>' }),
+			wide: true,
+			buttons: [{ label: 'Sluiten' }]
+		});
+	};
+
 	/* ----------------------------------------------------- modal */
 
 	App.prototype._modal = function (opts) {
@@ -1117,7 +1129,7 @@
 			}));
 		});
 
-		var dialog = el('div', { class: 'pmt-modal' }, [
+		var dialog = el('div', { class: 'pmt-modal' + (opts.wide ? ' pmt-modal--wide' : '') }, [
 			el('div', { class: 'pmt-modal-title', text: opts.title || '' }),
 			el('div', { class: 'pmt-modal-body' }, [opts.body]),
 			buttons
